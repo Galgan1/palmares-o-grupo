@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html><head><title>Sprite Test</title>
+<style>
+body { background: #111; color: #eee; font-family: monospace; padding: 20px; }
+.sprite-test { 
+  display: inline-block; margin: 10px; text-align: center; 
+  background: #222; padding: 10px; border-radius: 8px; vertical-align: top;
+}
+.sprite-test img { max-height: 200px; border: 1px solid #444; }
+.sprite-test .info { font-size: 12px; margin-top: 5px; color: #aaa; }
+
+/* SPRITE SHEET TEST: show just top-left quadrant */
+.crop-test {
+  display: inline-block; margin: 10px; text-align: center;
+  background: #333; padding: 10px; border-radius: 8px; vertical-align: top;
+}
+.crop-box {
+  width: 120px; height: 150px;
+  background-size: 200% 200%; /* 2x2 grid = show 1/4 */
+  background-position: 0% 0%; /* top-left = idle */
+  background-repeat: no-repeat;
+  border: 2px solid lime;
+  margin: 0 auto;
+}
+.crop-box.walk {
+  animation: sprite-walk 0.6s steps(1) infinite;
+}
+/* Cycle between: idle (0,0), walk1 (100%,0), idle-phone (0,100%), walk-phone (100%,100%) */
+@keyframes sprite-walk {
+  0%   { background-position: 0% 0%; }      /* idle */
+  50%  { background-position: 100% 0%; }     /* walk */
+  100% { background-position: 0% 0%; }       /* idle */
+}
+/* Alternative for 3-column top row: */
+.crop-box-3col {
+  width: 120px; height: 150px;
+  background-size: 300% 200%; /* 3 cols x 2 rows */
+  background-position: 0% 0%;
+  background-repeat: no-repeat;
+  border: 2px solid cyan;
+  margin: 0 auto;
+}
+.crop-box-3col.walk {
+  animation: sprite-walk-3 0.6s steps(1) infinite;
+}
+@keyframes sprite-walk-3 {
+  0%    { background-position: 0% 0%; }    /* frame 1 */
+  33%   { background-position: 50% 0%; }   /* frame 2 */
+  66%   { background-position: 100% 0%; }  /* frame 3 */
+  100%  { background-position: 0% 0%; }    /* back to 1 */
+}
+button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+</style>
+</head>
+<body>
+<h2>1. Raw Images (full size, capped at 200px height)</h2>
+<div id="raw-images"></div>
+
+<h2>2. Cropped as 2x2 Grid (top-left = idle)</h2>
+<div id="crop-2x2"></div>
+
+<h2>3. Cropped as 3x2 Grid (for dandara-style)</h2>
+<div id="crop-3x2"></div>
+
+<h2>4. Walk Animation Test</h2>
+<button onclick="toggleWalk()">▶ Toggle Walk</button>
+<div id="walk-test"></div>
+
+<script>
+const sprites = ['zumbi','dandara','ganga_zumba','grio','domingos','espiao','povo'];
+
+// 1. Raw images with size detection
+const rawDiv = document.getElementById('raw-images');
+sprites.forEach(name => {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'sprite-test';
+  const img = document.createElement('img');
+  img.src = `assets/${name}.png`;
+  img.onload = () => {
+    wrapper.querySelector('.info').textContent = 
+      `${name}: ${img.naturalWidth}x${img.naturalHeight}`;
+  };
+  const info = document.createElement('div');
+  info.className = 'info';
+  info.textContent = name + ': loading...';
+  wrapper.appendChild(img);
+  wrapper.appendChild(info);
+  rawDiv.appendChild(wrapper);
+});
+
+// 2. Cropped 2x2
+const crop2Div = document.getElementById('crop-2x2');
+sprites.forEach(name => {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'crop-test';
+  wrapper.innerHTML = `
+    <div class="crop-box" style="background-image: url('assets/${name}.png')"></div>
+    <div style="font-size:11px;margin-top:4px;color:#aaa">${name} (2x2 crop)</div>
+  `;
+  crop2Div.appendChild(wrapper);
+});
+
+// 3. Cropped 3x2
+const crop3Div = document.getElementById('crop-3x2');
+sprites.forEach(name => {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'crop-test';
+  wrapper.innerHTML = `
+    <div class="crop-box-3col" style="background-image: url('assets/${name}.png')"></div>
+    <div style="font-size:11px;margin-top:4px;color:#aaa">${name} (3x2 crop)</div>
+  `;
+  crop3Div.appendChild(wrapper);
+});
+
+// 4. Walk test
+const walkDiv = document.getElementById('walk-test');
+sprites.forEach(name => {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'crop-test';
+  wrapper.innerHTML = `
+    <div class="crop-box walk-char" id="walk-${name}" style="background-image: url('assets/${name}.png')"></div>
+    <div style="font-size:11px;margin-top:4px;color:#aaa">${name}</div>
+  `;
+  walkDiv.appendChild(wrapper);
+});
+
+let walking = false;
+function toggleWalk() {
+  walking = !walking;
+  document.querySelectorAll('.walk-char').forEach(el => {
+    el.classList.toggle('walk', walking);
+  });
+}
+</script>
+</body>
+</html>

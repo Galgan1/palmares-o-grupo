@@ -1,0 +1,8 @@
+# Backup local dos sprites originais (JPEGs com fundo xadrez) — redundante com assets/
+assets_raw/
+
+# Config local de preview do Claude Code
+.claude/
+
+# Artefatos de verificação
+_check.png

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Palmares: O Grupo — Jogo narrativo sobre o Quilombo dos Palmares. Trabalho escolar.">
+  <title>🌴 Palmares: O Grupo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ===== TITLE SCREEN ===== -->
+  <div id="title-screen">
+    <h1>🌴 PALMARES<br>O GRUPO</h1>
+    <p class="subtitle">1605 – 1694</p>
+    <button id="start-btn" class="start-btn">▶ JOGAR</button>
+    <p class="credits-line">por Débora M. V. — Trabalho Escolar 2026</p>
+  </div>
+
+  <!-- ===== GAME CONTAINER ===== -->
+  <div id="game-container">
+
+    <!-- HUD -->
+    <div id="hud">
+      <div id="group-name" class="group-name">PALMARES 🌴🔥</div>
+      <div class="indicators">
+        <div class="indicator" title="Soberania">
+          👑 <span id="sob-val" class="value">50</span>
+        </div>
+        <div class="indicator" title="Insatisfação">
+          😤 <span id="insat-val" class="value">20</span>
+        </div>
+      </div>
+      <div class="hud-buttons">
+        <button id="btn-dash" class="hud-btn" title="Dashboard do Quilombo">📊</button>
+        <button id="btn-onu" class="hud-btn" title="A ONU e Palmares">🌐</button>
+      </div>
+    </div>
+
+    <!-- GAME WORLD -->
+    <div id="game-world">
+      <!-- Backgrounds -->
+      <div id="bg-layer" style="background-image: url('assets/bg_trilha.png')"></div>
+      <div id="bg-layer-next"></div>
+
+      <!-- Characters as sprite-sheet divs (2x2 grid crop) -->
+      <div id="char-povo"    class="character char-crowd" data-sprite="assets/povo.png"></div>
+      <div id="char-grio"    class="character" data-sprite="assets/grio.png"></div>
+      <div id="char-ganga"   class="character" data-sprite="assets/ganga_zumba.png"></div>
+      <div id="char-dandara" class="character" data-sprite="assets/dandara.png"></div>
+      <div id="char-zumbi"   class="character" data-sprite="assets/zumbi.png"></div>
+
+      <!-- Phone Notification -->
+      <div id="phone-notif">
+        <span class="notif-icon">📱</span>
+        <span class="notif-text">Nova mensagem no grupo...</span>
+      </div>
+    </div>
+
+    <!-- DIALOGUE -->
+    <div id="dialogue-container">
+      <div id="messages-list"></div>
+      <div id="choices-container"></div>
+    </div>
+  </div>
+
+  <!-- ===== DASHBOARD OVERLAY ===== -->
+  <div id="dash-overlay" class="overlay">
+    <div class="overlay-content">
+      <button class="close-btn">✕</button>
+      <h2>📊 Dashboard do Quilombo</h2>
+      <div id="dash-content"></div>
+    </div>
+  </div>
+
+  <!-- ===== ONU OVERLAY ===== -->
+  <div id="onu-overlay" class="overlay">
+    <div class="overlay-content">
+      <button class="close-btn">✕</button>
+      <div id="onu-content"></div>
+    </div>
+  </div>
+
+  <!-- ===== TRANSITION OVERLAY ===== -->
+  <div id="transition-overlay">
+    <div id="transition-text" class="transition-text"></div>
+  </div>
+
+  <!-- ===== END SCREEN ===== -->
+  <div id="end-screen">
+    <div id="end-title" class="end-title"></div>
+    <div id="end-text" class="end-text"></div>
+    <div class="end-question">"Qual versão de Palmares vocês conheciam antes deste jogo?"</div>
+    <button id="end-credits-btn" class="end-btn">🎬 Créditos</button>
+  </div>
+
+  <!-- ===== CREDITS SCREEN ===== -->
+  <div id="credits-screen">
+    <div id="credits-scroll"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="story.js"></script>
+  <script src="game.js"></script>
+
+</body>
+</html>
