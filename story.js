@@ -1,6 +1,7 @@
 // ============================================================
 // PALMARES: O GRUPO — story.js
-// Toda a narrativa do jogo (17 escolhas, 4 fases, 3 finais)
+// Narrativa (4 fases) + sistema multi-dado (4 stats) + árvore de 6 finais.
+// Lógica pura (clampStat, pickEnding, applyEffects) testável em Node.
 // ============================================================
 
 const CHARACTERS = {
@@ -88,9 +89,9 @@ const STORY = [
       { char: 'dandara', text: '3️⃣ MOEDA — como fazemos trocas?' },
     ],
     choices: [
-      { text: '🐚 Búzios', effects: { moeda: 'Búzios', soberania: 5 }, next: 'constituicao' },
-      { text: '🌽 Sacos de milho', effects: { moeda: 'Sacos de Milho', soberania: 3 }, next: 'constituicao' },
-      { text: '🪙 PalmCoin 😂', effects: { moeda: 'PalmCoin', insatisfacao: 5 }, next: 'constituicao' },
+      { text: '🐚 Búzios', effects: { moeda: 'Búzios', soberania: 5, riqueza: 15 }, next: 'constituicao' },
+      { text: '🌽 Sacos de milho', effects: { moeda: 'Sacos de Milho', soberania: 3, riqueza: 8, populacao: 20 }, next: 'constituicao' },
+      { text: '🪙 PalmCoin 😂', effects: { moeda: 'PalmCoin', insatisfacao: 5, riqueza: -5 }, next: 'constituicao' },
     ]
   },
   {
@@ -120,9 +121,9 @@ const STORY = [
       { char: 'dandara', text: '5️⃣ POLÍTICA DE SAÚDE:' },
     ],
     choices: [
-      { text: '🌿 Curandeiros tradicionais', effects: { saude: 'Tradicional', insatisfacao: -5 }, next: 'resumo_fundacao' },
-      { text: '🏥 Treinar enfermeiros', effects: { saude: 'Treinamento', soberania: 5 }, next: 'resumo_fundacao' },
-      { text: '🌿🏥 Misturar os dois', effects: { saude: 'Mista', soberania: 3, insatisfacao: -3 }, next: 'resumo_fundacao' },
+      { text: '🌿 Curandeiros tradicionais', effects: { saude: 'Tradicional', insatisfacao: -5, populacao: 30 }, next: 'resumo_fundacao' },
+      { text: '🏥 Treinar enfermeiros', effects: { saude: 'Treinamento', soberania: 5, populacao: 20, riqueza: -5 }, next: 'resumo_fundacao' },
+      { text: '🌿🏥 Misturar os dois', effects: { saude: 'Mista', soberania: 3, insatisfacao: -3, populacao: 25 }, next: 'resumo_fundacao' },
     ]
   },
   {
@@ -147,6 +148,7 @@ const STORY = [
     bg: 'serra',
     walkTo: 0.20,
     transition: '1605 — Fundação',
+    onEnter: { populacao: 1700, riqueza: 700 },
     messages: [
       { char: 'zumbi', text: 'Chegamos na Serra! Primeiro problema real: quem planta e quem vigia?' },
       { char: 'ganga', text: '🎤 Áudio (5:12)' },
@@ -172,8 +174,8 @@ const STORY = [
       { char: 'ganga', text: 'EU IA CHEGAR LÁ, DANDARA 😤' },
     ],
     choices: [
-      { text: '✅ Aceitar todos. Liberdade não tem peneira.', effects: { soberania: -5, insatisfacao: -5 }, next: 'fase1_colheita' },
-      { text: '🔍 Aceitar com triagem. Dandara, monitora.', effects: { soberania: 5, insatisfacao: 3 }, next: 'fase1_colheita' },
+      { text: '✅ Aceitar todos. Liberdade não tem peneira.', effects: { soberania: -5, insatisfacao: -5, populacao: 600 }, next: 'fase1_colheita' },
+      { text: '🔍 Aceitar com triagem. Dandara, monitora.', effects: { soberania: 5, insatisfacao: 3, populacao: 250 }, next: 'fase1_colheita' },
     ]
   },
   {
@@ -190,8 +192,8 @@ const STORY = [
       { char: 'dandara', text: 'Griô, foco. 🙄' },
     ],
     choices: [
-      { text: '🍽️ Igual pra todos. Fome repartida.', effects: { soberania: -5, insatisfacao: -10 }, next: 'fase1_educacao' },
-      { text: '⚔️ Guerreiros primeiro. Eles protegem.', effects: { soberania: 5, insatisfacao: 10 }, next: 'fase1_educacao' },
+      { text: '🍽️ Igual pra todos. Fome repartida.', effects: { soberania: -5, insatisfacao: -10, populacao: 150 }, next: 'fase1_educacao' },
+      { text: '⚔️ Guerreiros primeiro. Eles protegem.', effects: { soberania: 5, insatisfacao: 10, populacao: -50 }, next: 'fase1_educacao' },
     ]
   },
   {
@@ -219,7 +221,8 @@ const STORY = [
     phase: 2,
     bg: 'mocambo',
     walkTo: 0.20,
-    transition: '45 anos depois... População: 20.000',
+    transition: '45 anos depois...',
+    onEnter: { populacao: 17000, riqueza: 4000 },
     messages: [
       { char: 'dandara', text: 'Precisamos de pólvora, ferro e sal.' },
       { char: 'dandara', text: 'A única fonte: as vilas coloniais. As mesmas que têm escravos.' },
@@ -230,8 +233,8 @@ const STORY = [
       { char: 'dandara', text: 'GRIÔ. FOCO. 🙄' },
     ],
     choices: [
-      { text: '🤝 Comerciar. Precisamos sobreviver.', effects: { soberania: 5, insatisfacao: 5 }, next: 'fase2_regras' },
-      { text: '🚫 Roubar. Eles nos devem.', effects: { soberania: 10, insatisfacao: 10 }, next: 'fase2_regras' },
+      { text: '🤝 Comerciar. Precisamos sobreviver.', effects: { soberania: 5, insatisfacao: 5, riqueza: 1500 }, next: 'fase2_regras' },
+      { text: '🚫 Roubar. Eles nos devem.', effects: { soberania: 10, insatisfacao: 10, riqueza: 2500 }, next: 'fase2_regras' },
     ]
   },
   {
@@ -302,6 +305,7 @@ const STORY = [
     bg: 'batalha',
     walkTo: 0.20,
     transition: '16 anos depois... 6 de janeiro de 1694',
+    onEnter: { populacao: -3000, riqueza: -2500 },
     messages: [
       { char: 'dandara', text: 'URGENTE. Domingos postou nos Stories.' },
       { char: 'dandara', text: '📸 Foto: 6.000 soldados com CANHÕES.' },
@@ -314,7 +318,7 @@ const STORY = [
     ],
     choices: [
       { text: '🏔️ Todos na Serra. Juntos até o fim.', effects: { soberania: 15, insatisfacao: 5 }, next: 'fase3_traidor' },
-      { text: '🌿 Espalhar o povo. Sobreviver é resistir.', effects: { soberania: -5, insatisfacao: -10 }, next: 'fase3_traidor' },
+      { text: '🌿 Espalhar o povo. Sobreviver é resistir.', effects: { soberania: -5, insatisfacao: -10, populacao: -4000 }, next: 'fase3_traidor' },
     ]
   },
   {
@@ -350,8 +354,8 @@ const STORY = [
       { char: 'grio', text: '😊' },
     ],
     choices: [
-      { text: '🏳️ Render pra salvar o povo.', effects: { soberania: -20, insatisfacao: -15 }, next: 'fase3_ultima' },
-      { text: '⚔️ Lutar. A liberdade não se negocia.', effects: { soberania: 15, insatisfacao: 5 }, next: 'fase3_ultima' },
+      { text: '🏳️ Render pra salvar o povo.', effects: { soberania: -20, insatisfacao: -15, populacao: 500 }, next: 'fase3_ultima' },
+      { text: '⚔️ Lutar. A liberdade não se negocia.', effects: { soberania: 15, insatisfacao: 5, populacao: -5000 }, next: 'fase3_ultima' },
     ]
   },
   {
@@ -377,25 +381,81 @@ const STORY = [
 
 const ENDINGS = {
   resistencia: {
-    title: '⚔️ A Resistência',
-    text: 'Palmares caiu em 6 de fevereiro de 1694. Mas caiu lutando. 104 anos de liberdade — mais do que muitos países. O preço foi altíssimo. Mas a escolha foi consciente. Ninguém ali morreu de joelhos.',
+    title: '🛡️ A Resistência Unida',
+    reason: 'Soberania alta com um povo unido (baixa insatisfação).',
+    text: 'Palmares caiu em 6 de fevereiro de 1694 — mas caiu de pé e unido. 104 anos de liberdade, mais do que muitos países tiveram. O preço foi altíssimo, e a escolha foi consciente. Ninguém ali morreu de joelhos.',
+  },
+  ferro: {
+    title: '⚔️ O Reino de Ferro',
+    reason: 'Soberania altíssima, mas conquistada à custa da liberdade interna.',
+    text: 'O quilombo sobreviveu forte — mas endureceu. As regras que protegiam o povo passaram a proteger o líder. Resistiu ao inimigo de fora virando, por dentro, um pouco daquilo que jurou combater.',
+  },
+  revolta: {
+    title: '🔥 A Revolta Interna',
+    reason: 'A insatisfação transbordou antes mesmo do inimigo chegar.',
+    text: 'Não foram os canhões de Domingos que derrubaram Palmares primeiro — foi a panela de pressão de dentro. Quando o povo deixa de se reconhecer no projeto, nenhuma muralha segura.',
+  },
+  exodo: {
+    title: '🌿 O Êxodo',
+    reason: 'A população se dispersou para sobreviver ao cerco.',
+    text: 'Palmares como lugar caiu, mas como ideia se espalhou pela mata em mil pedaços. Cada grupo que fugiu carregou uma semente. Sobreviver, às vezes, é a forma mais teimosa de resistir.',
+  },
+  prospera: {
+    title: '💰 A Nação Próspera',
+    reason: 'Riqueza e estabilidade econômica acima de tudo.',
+    text: 'Palmares virou potência econômica do sertão — comerciava, acumulava, negociava de igual para igual. Mas a prosperidade tem um preço: até onde dá pra crescer sem fazer acordos com quem te quer acorrentado?',
   },
   verdade: {
     title: '📖 A Verdade',
+    reason: 'Um caminho do meio: nem lenda perfeita, nem colapso.',
     text: 'Palmares durou 104 anos. Não era perfeito — tinha hierarquias, contradições e gente real fazendo escolhas impossíveis. Era uma sociedade humana, com tudo que isso significa. E talvez por isso valha a pena lembrar.',
-  },
-  espelho: {
-    title: '🪞 O Espelho',
-    text: 'Palmares caiu. E no espelho dos destroços, uma pergunta ficou: vocês construíram algo novo? Ou trocaram uma corrente por outra — só que dessa vez eram vocês com a chave?',
   },
 };
 
-const PHASE_DATA = {
-  0: { populacao: 300,    pib: 50,    idh: 0.30, taxas: '0%' },
-  1: { populacao: 2000,   pib: 800,   idh: 0.45, taxas: '10%' },
-  2: { populacao: 20000,  pib: 5000,  idh: 0.55, taxas: '20%' },
-  3: { populacao: 15000,  pib: 2000,  idh: 0.40, taxas: '30%' },
-};
+// ===== SISTEMA MULTI-DADO =====
+const INITIAL_STATS = { soberania: 50, insatisfacao: 20, populacao: 300, riqueza: 50 };
+
+// Os 4 dados vivos exibidos na HUD (tela principal)
+const STATS = [
+  { key: 'soberania',    emoji: '👑', label: 'Soberania',    kind: 'index' },
+  { key: 'insatisfacao', emoji: '😤', label: 'Insatisfação', kind: 'index', higherIsBad: true },
+  { key: 'populacao',    emoji: '👥', label: 'População',     kind: 'count' },
+  { key: 'riqueza',      emoji: '💰', label: 'Riqueza',       kind: 'count' },
+];
+
+function clampStat(key, value) {
+  if (key === 'soberania' || key === 'insatisfacao') return Math.max(0, Math.min(100, value));
+  if (key === 'populacao' || key === 'riqueza') return Math.max(0, Math.round(value));
+  return value;
+}
+
+// Dados derivados (mostrados no Dashboard, calculados a partir dos vivos)
+function derivedIDH(s) {
+  const bemEstar = (s.soberania + (100 - s.insatisfacao)) / 200;            // 0..1
+  const perCapita = Math.min(1, (s.riqueza / Math.max(1, s.populacao)) / 0.4);
+  return Math.round((bemEstar * 0.7 + perCapita * 0.3) * 100) / 100;
+}
+const TAXAS = { 'Igualitária': '5%', 'Conselho': '15%', 'Centralizada': '30%' };
+function derivedTaxas(s) { return TAXAS[s.constituicao] || '10%'; }
+
+// ===== ÁRVORE DE FINAIS — função PURA do perfil final (ordem = prioridade) =====
+function pickEnding(s) {
+  if (s.insatisfacao >= 70) return 'revolta';
+  if (s.soberania >= 75 && s.insatisfacao >= 45) return 'ferro';
+  if (s.soberania >= 60 && s.insatisfacao <= 35) return 'resistencia';
+  if (s.populacao <= 10000) return 'exodo';
+  if (s.riqueza >= 4500 && s.soberania >= 45) return 'prospera';
+  return 'verdade';
+}
+
+// Aplica deltas/sets em um estado (puro) — usado pelo motor e pelos testes
+function applyEffects(state, effects) {
+  for (const k in effects) {
+    if (k in INITIAL_STATS) state[k] = clampStat(k, (state[k] || 0) + effects[k]);
+    else state[k] = effects[k];
+  }
+  return state;
+}
 
 const ONU_TEXT = `<h2>🌐 A ONU e Palmares</h2>
 <p>A ONU foi criada em <strong>1945</strong> — 251 anos depois da queda de Palmares.</p>
@@ -431,3 +491,11 @@ const CREDITS = [
   { role: '', name: '"A história é contada por quem sobrevive.' },
   { role: '', name: 'Escolha bem quem conta a sua."' },
 ];
+
+// Export p/ testes em Node (inofensivo no browser: 'module' é undefined lá)
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    STORY, ENDINGS, STATS, INITIAL_STATS, BANDEIRAS,
+    flagSVG, clampStat, pickEnding, derivedIDH, derivedTaxas, applyEffects,
+  };
+}

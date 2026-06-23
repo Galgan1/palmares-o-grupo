@@ -5,8 +5,7 @@
 
 const Game = {
   state: {
-    soberania: 50,
-    insatisfacao: 20,
+    ...INITIAL_STATS,            // soberania, insatisfacao, populacao, riqueza
     nomeQuilombo: '',
     bandeira: '',
     moeda: '',
@@ -18,11 +17,12 @@ const Game = {
   },
 
   els: {},
+  statEls: {},
   messageQueue: [],
-  isTyping: false,
 
   init() {
     this.cacheElements();
+    this.buildStatsBar();
     this.bindEvents();
     this.preloadImages();
     this.initSprites();
@@ -38,8 +38,8 @@ const Game = {
       bgLayerNext: document.getElementById('bg-layer-next'),
       hud: document.getElementById('hud'),
       groupName: document.getElementById('group-name'),
-      soberaniaVal: document.getElementById('sob-val'),
-      insatisfacaoVal: document.getElementById('insat-val'),
+      statsBar: document.getElementById('stats-bar'),
+      flagReveal: document.getElementById('flag-reveal'),
       phoneNotif: document.getElementById('phone-notif'),
       dialogueContainer: document.getElementById('dialogue-container'),
       messagesList: document.getElementById('messages-list'),
@@ -50,6 +50,7 @@ const Game = {
       transitionText: document.getElementById('transition-text'),
       endTitle: document.getElementById('end-title'),
       endText: document.getElementById('end-text'),
+      endStats: document.getElementById('end-stats'),
       creditsScroll: document.getElementById('credits-scroll'),
       charZumbi: document.getElementById('char-zumbi'),
       charDandara: document.getElementById('char-dandara'),
@@ -95,13 +96,40 @@ const Game = {
     });
   },
 
+  // ===== STATS BAR (todos os dados na tela principal) =====
+  buildStatsBar() {
+    const bar = this.els.statsBar;
+    bar.innerHTML = '';
+    this.statEls = {};
+    STATS.forEach(meta => {
+      const el = document.createElement('div');
+      el.className = 'stat';
+      el.title = meta.label;
+      const val = document.createElement('span');
+      val.className = 'stat-val';
+      val.textContent = this.fmtStat(meta.key, this.state[meta.key]);
+      el.innerHTML = `<span class="stat-emoji">${meta.emoji}</span>`;
+      el.appendChild(val);
+      bar.appendChild(el);
+      this.statEls[meta.key] = { el, value: val };
+    });
+  },
+
+  compact(n) {
+    const x = Math.abs(n);
+    if (x >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return String(n);
+  },
+  fmtStat(key, v) {
+    return STATS.find(s => s.key === key).kind === 'count' ? this.compact(v) : String(v);
+  },
+
   // ===== START =====
   startGame() {
     this.els.titleScreen.classList.add('hidden');
     setTimeout(() => {
       this.els.titleScreen.style.display = 'none';
       this.els.gameContainer.classList.add('active');
-      this.els.messagesList.innerHTML = ''; // novo jogo: chat começa vazio
       this.loadNode(0);
     }, 800);
   },
@@ -134,6 +162,9 @@ const Game = {
     if (node.phase !== this.state.phase) {
       this.state.phase = node.phase;
     }
+
+    // Crescimento/perdas históricas ao entrar na fase (anima os deltas na HUD)
+    if (node.onEnter) this.applyEffects(node.onEnter);
 
     // Remove character if needed
     if (node.removeChar === 'ganga') {
@@ -189,36 +220,26 @@ const Game = {
   },
 
   // ===== CHARACTER WALKING =====
+  // Faixas fixas e bem separadas + profundidade (CSS) = coluna em marcha, sem
+  // sobreposição confusa. O grupo desliza um pouco conforme avança na trilha.
   walkCharactersTo(targetPercent, callback) {
-    const chars = ['charZumbi', 'charDandara', 'charGrio', 'charPovo'];
-    if (this.state.gangaAlive) chars.splice(2, 0, 'charGanga');
+    const lanes = { charPovo: 24, charGrio: 8, charGanga: 24, charDandara: 40, charZumbi: 56 };
+    const slide = targetPercent * 12; // deriva sutil do grupo (0..~11%)
+    const order = ['charPovo', 'charGrio', 'charGanga', 'charDandara', 'charZumbi'];
 
-    const offsets = [0, -8, -16, -24, -36]; // spacing between chars
-    const baseLeft = targetPercent * 100;
-
-    // Start all walking with stagger
-    chars.forEach((id, i) => {
+    order.forEach((id, i) => {
       const el = this.els[id];
-      if (!el) return;
-      if (el.classList.contains('removed')) return;
-
+      if (!el || el.classList.contains('removed')) return;
       setTimeout(() => {
         el.classList.add('walking');
-        const offset = offsets[i] !== undefined ? offsets[i] : -36;
-        const finalLeft = Math.max(0, baseLeft + offset);
-        el.style.left = `${finalLeft}%`;
-      }, i * 150); // staggered 150ms per char
+        el.style.left = `${(lanes[id] || 0) + slide}%`;
+      }, i * 150); // chegada escalonada
     });
 
-    // Stop walking after transition completes
-    const totalTime = 3000;
     setTimeout(() => {
-      chars.forEach(id => {
-        const el = this.els[id];
-        if (el) el.classList.remove('walking');
-      });
+      order.forEach(id => { const el = this.els[id]; if (el) el.classList.remove('walking'); });
       if (callback) callback();
-    }, totalTime);
+    }, 3000);
   },
 
   // ===== PHONE NOTIFICATION =====
@@ -254,10 +275,10 @@ const Game = {
   // ===== DIALOGUE =====
   showDialogue(messages, choices) {
     const container = this.els.dialogueContainer;
-    const choicesEl = this.els.choicesContainer;
 
-    // Histórico do chat é mantido entre etapas (não zera) — só troca as escolhas
-    choicesEl.innerHTML = '';
+    // Cada etapa começa com o chat limpo (sem acúmulo de histórico)
+    this.els.messagesList.innerHTML = '';
+    this.els.choicesContainer.innerHTML = '';
     container.classList.add('active');
 
     // Queue messages one by one
@@ -319,66 +340,61 @@ const Game = {
 
   // ===== MAKE CHOICE =====
   makeChoice(choice) {
-    // Apply effects
-    if (choice.effects) {
-      Object.entries(choice.effects).forEach(([key, val]) => {
-        if (key === 'soberania') {
-          this.state.soberania = Math.max(0, Math.min(100, this.state.soberania + val));
-          this.updateIndicator('sob', this.state.soberania, val);
-        } else if (key === 'insatisfacao') {
-          this.state.insatisfacao = Math.max(0, Math.min(100, this.state.insatisfacao + val));
-          this.updateIndicator('insat', this.state.insatisfacao, val);
-        } else {
-          this.state[key] = val;
-        }
-      });
-    }
-
-    // Atualiza o nome do grupo na HUD (mesmo quando a escolha só define o nome)
-    if (this.state.nomeQuilombo) {
-      this.els.groupName.textContent = `${this.state.nomeQuilombo} 🌴🔥`;
-    }
-
-    // Bandeira recém-criada: desenha no chat (persiste no histórico) e no Dashboard
-    if (choice.effects && choice.effects.bandeira) {
-      const div = document.createElement('div');
-      div.className = 'msg system';
-      div.innerHTML = `<div class="msg-body"><div class="msg-text">🏴 Bandeira criada</div><div class="flag-msg">${flagSVG(choice.effects.bandeira)}</div></div>`;
-      this.els.messagesList.appendChild(div);
-      this.els.messagesList.scrollTop = this.els.messagesList.scrollHeight;
-    }
-
-    // Hide dialogue
+    this.applyEffects(choice.effects);
     this.els.dialogueContainer.classList.remove('active');
 
-    // Next node
     if (choice.next === 'END') {
       setTimeout(() => this.showEnding(), 1500);
     } else {
       const nextIndex = STORY.findIndex(n => n.id === choice.next);
-      if (nextIndex >= 0) {
-        setTimeout(() => this.loadNode(nextIndex), 800);
+      if (nextIndex >= 0) setTimeout(() => this.loadNode(nextIndex), 800);
+    }
+  },
+
+  // Aplica efeitos (deltas nos 4 dados + sets categóricos), animando a HUD
+  applyEffects(effects) {
+    if (!effects) return;
+    for (const key in effects) {
+      const val = effects[key];
+      if (key in INITIAL_STATS) {
+        const novo = clampStat(key, (this.state[key] || 0) + val);
+        this.state[key] = novo;
+        this.updateStat(key, novo, val);
+      } else {
+        this.state[key] = val;
+        if (key === 'nomeQuilombo') this.els.groupName.textContent = `${val} 🌴🔥`;
+        if (key === 'bandeira') this.showFlagReveal(val);
       }
     }
   },
 
-  // ===== UPDATE INDICATORS =====
-  updateIndicator(type, value, delta) {
-    const el = type === 'sob' ? this.els.soberaniaVal : this.els.insatisfacaoVal;
-    el.textContent = value;
-    const ind = el.parentElement;
-    ind.classList.add('flash');
-    setTimeout(() => ind.classList.remove('flash'), 500);
+  // ===== ATUALIZA UM DADO NA HUD (valor + bolha de delta) =====
+  updateStat(key, value, delta) {
+    const ref = this.statEls[key];
+    if (!ref) return;
+    ref.value.textContent = this.fmtStat(key, value);
+    ref.el.classList.add('flash');
+    setTimeout(() => ref.el.classList.remove('flash'), 500);
 
-    // Bolha flutuante com o delta (+5 / -3) a cada decisão
     if (delta) {
-      const good = (type === 'sob') ? delta > 0 : delta < 0; // +soberania bom; +insatisfação ruim
+      const meta = STATS.find(s => s.key === key);
+      const bom = meta.higherIsBad ? delta < 0 : delta > 0;
       const pop = document.createElement('span');
-      pop.className = 'delta-pop ' + (good ? 'pos' : 'neg');
-      pop.textContent = (delta > 0 ? '+' : '') + delta;
-      ind.appendChild(pop);
-      setTimeout(() => pop.remove(), 1000);
+      pop.className = 'delta-pop ' + (bom ? 'pos' : 'neg');
+      pop.textContent = (delta > 0 ? '+' : '-') + this.compact(Math.abs(delta));
+      ref.el.appendChild(pop);
+      setTimeout(() => pop.remove(), 1100);
     }
+  },
+
+  // Bandeira desenhada após a escolha (revelação rápida)
+  showFlagReveal(bandeira) {
+    const el = this.els.flagReveal;
+    if (!el) return;
+    el.innerHTML = flagSVG(bandeira, 168, 109);
+    el.classList.remove('show');
+    void el.offsetWidth;
+    el.classList.add('show');
   },
 
   // ===== TRANSITION =====
@@ -393,24 +409,26 @@ const Game = {
     }, 2500);
   },
 
-  // ===== ENDING =====
+  // ===== ENDING (árvore de finais por perfil de dados) =====
   showEnding() {
-    let endKey;
-    if (this.state.soberania >= 70) endKey = 'resistencia';
-    else if (this.state.insatisfacao >= 70) endKey = 'espelho';
-    else endKey = 'verdade';
-
-    const ending = ENDINGS[endKey];
+    const s = this.state;
+    const ending = ENDINGS[pickEnding(s)];
 
     this.els.gameContainer.classList.remove('active');
     this.els.endScreen.classList.add('active');
     this.els.endTitle.textContent = ending.title;
     this.els.endText.textContent = ending.text;
+
+    // Por que este final? + os dados finais que levaram a ele
+    this.els.endStats.innerHTML =
+      `<div class="end-reason">🔎 ${ending.reason}</div>` +
+      '<div class="end-stat-grid">' +
+      STATS.map(m => `<div class="end-stat"><span>${m.emoji}</span><b>${this.fmtStat(m.key, s[m.key])}</b><small>${m.label}</small></div>`).join('') +
+      '</div>';
   },
 
   // ===== DASHBOARD =====
   showDashboard() {
-    const d = PHASE_DATA[this.state.phase];
     const s = this.state;
     const cell = (label, value, opts = {}) =>
       `<div class="dash-item${opts.full ? ' full-width' : ''}">
@@ -433,10 +451,10 @@ const Game = {
       ]) +
       '<hr style="border-color: rgba(255,255,255,0.1); margin: 16px 0;">' +
       grid([
-        cell('👥 População', d.populacao.toLocaleString()),
-        cell('💰 PIB', `${d.pib.toLocaleString()} ${s.moeda || '?'}`),
-        cell('📈 IDH', d.idh),
-        cell('💸 Taxas', d.taxas),
+        cell('👥 População', s.populacao.toLocaleString('pt-BR')),
+        cell('💰 Riqueza', `${s.riqueza.toLocaleString('pt-BR')} ${s.moeda || ''}`.trim()),
+        cell('📈 IDH', derivedIDH(s)),
+        cell('💸 Taxas', derivedTaxas(s)),
         cell('👑 Soberania', s.soberania),
         cell('😤 Insatisfação', s.insatisfacao),
       ]);
@@ -479,13 +497,12 @@ const Game = {
       this.els.titleScreen.classList.remove('hidden');
       // Reset state
       this.state = {
-        soberania: 50, insatisfacao: 20,
+        ...INITIAL_STATS,
         nomeQuilombo: '', bandeira: '', moeda: '',
         constituicao: '', saude: '',
         currentNode: 0, phase: 0, gangaAlive: true,
       };
-      this.els.soberaniaVal.textContent = '50';
-      this.els.insatisfacaoVal.textContent = '20';
+      this.buildStatsBar();
       this.els.groupName.textContent = 'PALMARES 🌴🔥';
       if (this.els.charGanga) this.els.charGanga.classList.remove('removed');
       // Reset positions

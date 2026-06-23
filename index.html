@@ -22,19 +22,15 @@
 
     <!-- HUD -->
     <div id="hud">
-      <div id="group-name" class="group-name">PALMARES 🌴🔥</div>
-      <div class="indicators">
-        <div class="indicator" title="Soberania">
-          👑 <span id="sob-val" class="value">50</span>
-        </div>
-        <div class="indicator" title="Insatisfação">
-          😤 <span id="insat-val" class="value">20</span>
+      <div class="hud-top">
+        <div id="group-name" class="group-name">PALMARES 🌴🔥</div>
+        <div class="hud-buttons">
+          <button id="btn-dash" class="hud-btn" title="Dashboard do Quilombo">📊</button>
+          <button id="btn-onu" class="hud-btn" title="A ONU e Palmares">🌐</button>
         </div>
       </div>
-      <div class="hud-buttons">
-        <button id="btn-dash" class="hud-btn" title="Dashboard do Quilombo">📊</button>
-        <button id="btn-onu" class="hud-btn" title="A ONU e Palmares">🌐</button>
-      </div>
+      <!-- Todos os dados vivos, preenchidos por game.js a partir de STATS -->
+      <div id="stats-bar" class="stats-bar"></div>
     </div>
 
     <!-- GAME WORLD -->
@@ -55,6 +51,9 @@
         <span class="notif-icon">📱</span>
         <span class="notif-text">Nova mensagem no grupo...</span>
       </div>
+
+      <!-- Bandeira revelada (desenhada) após a escolha -->
+      <div id="flag-reveal"></div>
     </div>
 
     <!-- DIALOGUE -->
@@ -90,6 +89,7 @@
   <div id="end-screen">
     <div id="end-title" class="end-title"></div>
     <div id="end-text" class="end-text"></div>
+    <div id="end-stats" class="end-stats"></div>
     <div class="end-question">"Qual versão de Palmares vocês conheciam antes deste jogo?"</div>
     <button id="end-credits-btn" class="end-btn">🎬 Créditos</button>
   </div>
