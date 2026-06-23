@@ -15,11 +15,11 @@ const CHARACTERS = {
 };
 
 const BACKGROUNDS = {
-  trilha:     'assets/bg_trilha.png',
-  serra:      'assets/bg_serra.png',
-  mocambo:    'assets/bg_mocambo.png',
-  entardecer: 'assets/bg_entardecer.png',
-  batalha:    'assets/bg_batalha.png',
+  trilha:     'assets/bg_trilha.webp',
+  serra:      'assets/bg_serra.webp',
+  mocambo:    'assets/bg_mocambo.webp',
+  entardecer: 'assets/bg_entardecer.webp',
+  batalha:    'assets/bg_batalha.webp',
 };
 
 // Bandeira desenhada (SVG) a partir da escolha — usada na revelação e no Dashboard
