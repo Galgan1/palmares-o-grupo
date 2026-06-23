@@ -152,30 +152,17 @@ html, body {
   flex: 1; min-height: 0; position: relative; overflow: hidden;
 }
 
-#bg-layer {
+#bg-layer, #bg-layer-next {
   position: absolute; inset: 0;
   background-size: cover;
   background-position: center;
   transition: opacity 1s ease;
 }
-#bg-layer-next {
-  position: absolute; inset: 0;
-  background-size: cover;
-  background-position: center;
-  opacity: 0;
-  transition: opacity 1s ease;
-}
+#bg-layer-next { opacity: 0; }
 
-/* ===== CHARACTERS (SPRITE SHEET SYSTEM) ===== 
-   All sprites are 2x2 grids:
-   ┌──────────┬──────────┐
-   │ idle (0) │ walk1(1) │   top row
-   ├──────────┼──────────┤
-   │ walk2(2) │ walk3(3) │   bottom row
-   └──────────┴──────────┘
-   background-size: 200% crops to 1/4. 
-   background-position selects which frame.
-*/
+/* ===== CHARACTERS =====
+   Cada sprite é uma pose única (PNG com alfa), exibida via background-size:contain.
+   "Andar" = deslizar (transition left) + balanço (walk-bob). */
 .character {
   position: absolute;
   bottom: 6%;
@@ -311,8 +298,8 @@ html, body {
   overflow-y: auto;
   padding-right: 4px;
 }
-#messages-list::-webkit-scrollbar { width: 4px; }
-#messages-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+#messages-list::-webkit-scrollbar, .overlay-content::-webkit-scrollbar { width: 4px; }
+#messages-list::-webkit-scrollbar-thumb, .overlay-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
 
 .msg {
   display: flex; gap: 8px; align-items: flex-start;
@@ -418,8 +405,6 @@ html, body {
   max-height: 80vh; overflow-y: auto;
   position: relative;
 }
-.overlay-content::-webkit-scrollbar { width: 4px; }
-.overlay-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
 
 .overlay-content h2 {
   font-size: 1.3rem;

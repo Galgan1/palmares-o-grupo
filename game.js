@@ -93,7 +93,6 @@ const Game = {
       // Start offscreen
       el.style.left = '-15%';
     });
-    console.log('[SPRITES] Initialized', document.querySelectorAll('.character').length, 'characters');
   },
 
   // ===== START =====
@@ -197,20 +196,17 @@ const Game = {
     const offsets = [0, -8, -16, -24, -36]; // spacing between chars
     const baseLeft = targetPercent * 100;
 
-    console.log('[WALK] Moving to', targetPercent, '| chars:', chars.length);
-
     // Start all walking with stagger
     chars.forEach((id, i) => {
       const el = this.els[id];
-      if (!el) { console.warn('[WALK] Element not found:', id); return; }
+      if (!el) return;
       if (el.classList.contains('removed')) return;
-      
+
       setTimeout(() => {
         el.classList.add('walking');
         const offset = offsets[i] !== undefined ? offsets[i] : -36;
         const finalLeft = Math.max(0, baseLeft + offset);
         el.style.left = `${finalLeft}%`;
-        console.log('[WALK]', id, '→', finalLeft + '%', 'walking:', el.classList.contains('walking'));
       }, i * 150); // staggered 150ms per char
     });
 
@@ -221,7 +217,6 @@ const Game = {
         const el = this.els[id];
         if (el) el.classList.remove('walking');
       });
-      console.log('[WALK] Walk complete, calling dialogue');
       if (callback) callback();
     }, totalTime);
   },
@@ -415,60 +410,36 @@ const Game = {
 
   // ===== DASHBOARD =====
   showDashboard() {
-    const data = PHASE_DATA[this.state.phase];
-    const content = document.getElementById('dash-content');
+    const d = PHASE_DATA[this.state.phase];
+    const s = this.state;
+    const cell = (label, value, opts = {}) =>
+      `<div class="dash-item${opts.full ? ' full-width' : ''}">
+        <div class="dash-label">${label}</div>
+        <div class="dash-value"${opts.style ? ` style="${opts.style}"` : ''}>${value}</div>
+      </div>`;
+    const grid = cells => `<div class="dash-grid">${cells.join('')}</div>`;
+    const sm = 'font-size:0.9rem';
+    const bandeira = s.bandeira
+      ? flagSVG(s.bandeira, 100, 64) + `<div style="margin-top:4px">${s.bandeira}</div>`
+      : '—';
 
-    content.innerHTML = `
-      <div class="dash-grid">
-        <div class="dash-item full-width">
-          <div class="dash-label">Nome</div>
-          <div class="dash-value">${this.state.nomeQuilombo || '(não definido)'}</div>
-        </div>
-        <div class="dash-item">
-          <div class="dash-label">Bandeira</div>
-          <div class="dash-value" style="font-size:0.8rem">${this.state.bandeira ? flagSVG(this.state.bandeira, 100, 64) + '<div style="margin-top:4px">' + this.state.bandeira + '</div>' : '—'}</div>
-        </div>
-        <div class="dash-item">
-          <div class="dash-label">Moeda</div>
-          <div class="dash-value" style="font-size:0.9rem">${this.state.moeda || '—'}</div>
-        </div>
-        <div class="dash-item">
-          <div class="dash-label">Constituição</div>
-          <div class="dash-value" style="font-size:0.9rem">${this.state.constituicao || '—'}</div>
-        </div>
-        <div class="dash-item">
-          <div class="dash-label">Saúde</div>
-          <div class="dash-value" style="font-size:0.9rem">${this.state.saude || '—'}</div>
-        </div>
-      </div>
-      <hr style="border-color: rgba(255,255,255,0.1); margin: 16px 0;">
-      <div class="dash-grid">
-        <div class="dash-item">
-          <div class="dash-label">👥 População</div>
-          <div class="dash-value">${data.populacao.toLocaleString()}</div>
-        </div>
-        <div class="dash-item">
-          <div class="dash-label">💰 PIB</div>
-          <div class="dash-value">${data.pib.toLocaleString()} ${this.state.moeda || '?'}</div>
-        </div>
-        <div class="dash-item">
-          <div class="dash-label">📈 IDH</div>
-          <div class="dash-value">${data.idh}</div>
-        </div>
-        <div class="dash-item">
-          <div class="dash-label">💸 Taxas</div>
-          <div class="dash-value">${data.taxas}</div>
-        </div>
-        <div class="dash-item">
-          <div class="dash-label">👑 Soberania</div>
-          <div class="dash-value">${this.state.soberania}</div>
-        </div>
-        <div class="dash-item">
-          <div class="dash-label">😤 Insatisfação</div>
-          <div class="dash-value">${this.state.insatisfacao}</div>
-        </div>
-      </div>
-    `;
+    document.getElementById('dash-content').innerHTML =
+      grid([
+        cell('Nome', s.nomeQuilombo || '(não definido)', { full: true }),
+        cell('Bandeira', bandeira, { style: 'font-size:0.8rem' }),
+        cell('Moeda', s.moeda || '—', { style: sm }),
+        cell('Constituição', s.constituicao || '—', { style: sm }),
+        cell('Saúde', s.saude || '—', { style: sm }),
+      ]) +
+      '<hr style="border-color: rgba(255,255,255,0.1); margin: 16px 0;">' +
+      grid([
+        cell('👥 População', d.populacao.toLocaleString()),
+        cell('💰 PIB', `${d.pib.toLocaleString()} ${s.moeda || '?'}`),
+        cell('📈 IDH', d.idh),
+        cell('💸 Taxas', d.taxas),
+        cell('👑 Soberania', s.soberania),
+        cell('😤 Insatisfação', s.insatisfacao),
+      ]);
 
     this.els.dashOverlay.classList.add('active');
   },
