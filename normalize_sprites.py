@@ -39,6 +39,22 @@ def largest_component(mask):
     keep = np.argmax(sizes) + 1
     return lbl == keep
 
+def defringe(mask, rgb, thresh=150, iters=5):
+    """Descasca o halo claro: pixels claros+acinzentados NA BORDA, parando no
+    contorno escuro do desenho. Branco interno (barba) nunca é borda -> preservado."""
+    r, g, b = rgb[..., 0].astype(int), rgb[..., 1].astype(int), rgb[..., 2].astype(int)
+    mx = np.maximum(np.maximum(r, g), b)
+    mn = np.minimum(np.minimum(r, g), b)
+    light = ((mx - mn) <= 30) & (mx >= thresh)
+    m = mask.copy()
+    for _ in range(iters):
+        boundary = m & ndimage.binary_dilation(~m)
+        rem = boundary & light
+        if not rem.any():
+            break
+        m = m & ~rem
+    return m
+
 def trim(rgba):
     a = rgba[..., 3]
     ys, xs = np.where(a > 8)
@@ -57,6 +73,7 @@ def process(name, box, keep_largest):
     mask = remove_checker(rgb)
     if keep_largest:
         mask = largest_component(mask)
+    mask = defringe(mask, rgb)   # remove o halo claro da borda
     rgba = np.dstack([rgb, np.where(mask, 255, 0).astype(np.uint8)])
     rgba = trim(rgba)
     Image.fromarray(rgba, "RGBA").save(f"{OUT}/{name}.png")
