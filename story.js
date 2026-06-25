@@ -473,9 +473,13 @@ const ONU_TEXT = `<h2>🌐 A ONU e Palmares</h2>
 
 const CREDITS = [
   { role: '', name: '🌴 PALMARES: O GRUPO 🌴' },
-  { role: 'Criado por', name: 'Débora M. V.' },
-  { role: 'Game Design & Narrativa', name: 'Débora M. V.' },
-  { role: 'Pesquisa Histórica', name: 'Débora M. V.' },
+  { role: 'Um projeto dos alunos', name: '' },
+  { role: '', name: 'Laura Lima' },
+  { role: '', name: 'Rafael Afonso' },
+  { role: '', name: 'Débora Marilack' },
+  { role: '', name: 'Luiz Teodoro' },
+  { role: '', name: 'João Luiz' },
+  { role: '—', name: '' },
   { role: 'Arte e Assets', name: 'Gerados com auxílio de IA' },
   { role: 'Diálogos', name: 'Desenvolvidos com auxílio de IA' },
   { role: 'Motor do Jogo', name: 'HTML5 / JavaScript' },

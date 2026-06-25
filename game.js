@@ -62,6 +62,11 @@ const Game = {
 
   bindEvents() {
     document.getElementById('start-btn').addEventListener('click', () => this.startGame());
+    document.getElementById('intro-btn').addEventListener('click', () => document.getElementById('intro-overlay').classList.add('active'));
+    document.getElementById('intro-play-btn').addEventListener('click', () => {
+      document.getElementById('intro-overlay').classList.remove('active');
+      this.startGame();
+    });
     document.getElementById('btn-dash').addEventListener('click', () => this.showDashboard());
     document.getElementById('btn-onu').addEventListener('click', () => this.showONU());
     document.querySelectorAll('.close-btn').forEach(btn => {
