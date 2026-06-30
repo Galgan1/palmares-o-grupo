@@ -105,6 +105,14 @@ html, body {
 }
 .intro-team-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); margin-bottom: 6px; }
 .intro-team-names { font-size: 0.95rem; font-weight: 700; color: var(--gold); line-height: 1.7; }
+.intro-rules { list-style: none; padding-left: 0; margin: 6px 0 12px; }
+.intro-rules li { display: flex; align-items: baseline; gap: 10px; margin-bottom: 7px; }
+.intro-rules li > span { font-size: 1.15rem; flex-shrink: 0; }
+.intro-rules li > div { font-size: 0.88rem; color: var(--text-dim); line-height: 1.4; }
+.intro-rules strong { color: var(--text); }
+.intro-steps { padding-left: 20px; margin: 6px 0 8px; }
+.intro-steps li { font-size: 0.86rem; line-height: 1.55; color: var(--text-dim); margin-bottom: 8px; }
+.intro-steps strong { color: var(--gold); }
 #intro-play-btn {
   display: block; width: 100%; margin-top: 4px;
   padding: 14px; border: none; border-radius: 12px;
